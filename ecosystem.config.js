@@ -2,7 +2,7 @@ module.exports = {
     apps: [
         {
             name: 'Teasquare Trading Bot',
-            script: 'tsc && node dist/index.js',
+            script: 'dist/index.js',
             watch: true,
             env: {
                 NODE_ENV: 'development',
