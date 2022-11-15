@@ -1,6 +1,7 @@
 import { accounts, checkBalance, setLeverage } from "./account"
 import { prisma } from '../config'
 import ccxt from 'ccxt'
+import { sendMessage } from '../utils/telegram'
 
 type side = "buy" | "sell"
 const defaultAccount = new ccxt.bybit()
@@ -25,18 +26,23 @@ export const openTrade = async (rawPair: string, side: side, tradeLeverage: numb
                         }
                     })
                     if (openTrades.length > 0) {
-                        console.log('Trade already open')
+                        console.log('Trade already open on this pair')
                         return
                     }
                     const usdtBalance = await checkBalance(account, 'USDT')
                     const bankrollSize = credentials[0].bankrollPercentage / 100
+                    const positionSize = usdtBalance.total * bankrollSize
                     const price = await defaultAccount.fetchTicker(pair)
-                    const quantity = Number((usdtBalance.free * bankrollSize / Number(price.last)).toFixed(3))
-                    if (quantity <= limit) {
-                        console.log('USDT is not enough to open trade')
+                    const quantity = Number((positionSize / Number(price.last)).toFixed(3))
+                    if (positionSize > usdtBalance.free) {
+                        console.log('Not enough USDT to open trade')
                         return
                     }
-                    console.log('USDT is enough to open trade')
+                    if (quantity < limit) {
+                        console.log('Quantity is under limit')
+                        return
+                    }
+                    console.log('Enough USDT to open trade')
                     let leverage = tradeLeverage
                     if (tradeLeverage > credentials[0].maxLeverage) {
                         console.log('Leverage is too high')
@@ -56,12 +62,14 @@ export const openTrade = async (rawPair: string, side: side, tradeLeverage: numb
                         }
                     })
                     console.log('trade open')
+                    sendMessage(`Nouveau trade ouvert ! 🚨%0ACrypto: ${pair}%0ATrade: ${side === 'buy' ? 'LONG 🟢' : 'SHORT 🔴'} x${leverage}%0APrix d'entrée: ${price}`)
                 } catch (error) {
                     throw error
                 }
             })
         } else {
             console.log(`No market for ${rawPair}`)
+            sendMessage(`No market for ${rawPair}`)
             return
         }
     }
@@ -85,7 +93,7 @@ export const closeTrade = async (rawPair: string) => {
                 const openTrade = openTrades[0]
                 const side = openTrade.side === 'buy' ? 'sell' : 'buy'
                 await account.createMarketOrder(pair, side, openTrade.size, undefined, { reduce_only: true })
-                let percent = (Number(price.last) - openTrade.entryPrice) / Number(price.last) * 100
+                let percent = (Number(price.last) - openTrade.entryPrice) / Number(price.last) * 100 * openTrade.leverage
                 if (side === 'buy') {
                     percent = -percent
                 }
@@ -100,6 +108,7 @@ export const closeTrade = async (rawPair: string) => {
                     }
                 })
                 console.log('trade closed')
+                sendMessage(`Clotûre de trade ! ${win ? '✅' : '❌'}%0ACrypto: ${openTrade.pair}%0ATrade: ${openTrade.side === 'buy' ? 'LONG 🟢' : 'SHORT 🔴'} x${openTrade.leverage}%0APrix de clôture: ${price}$%0A${win ? 'Gain' : 'Perte'}: ${percent}%`)
             }
         } catch (error) {
             throw error
