@@ -8,4 +8,4 @@ services:
       dockerfile: Dockerfile
     ports:
       - 4000:4000
-    container_name: teasquare
+    container_name: teasquare-trading
