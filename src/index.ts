@@ -32,7 +32,6 @@ io.on('connection', (socket) => {
 
     socket.on('openTrade', async (trade) => {
         console.log('Nouveau Signal Ouverture', trade)
-        sendMessage(`Nouveau Signal Ouverture ${JSON.stringify(trade)}`)
         try {
             await openTrade(trade.pair, trade.side, trade.leverage)
         } catch (error) {
@@ -42,7 +41,6 @@ io.on('connection', (socket) => {
 
     socket.on('closeTrade', async (trade) => {
         console.log('Nouveau Signal Clotûre', trade)
-        sendMessage(`Nouveau Signal Clotûre ${JSON.stringify(trade)}`)
         try {
             await closeTrade(trade.pair)
         } catch (error) {
