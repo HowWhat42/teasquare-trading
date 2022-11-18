@@ -1,7 +1,7 @@
 import { accounts, checkBalance, setLeverage } from "./account"
 import { prisma } from '../config'
 import ccxt from 'ccxt'
-import { sendMessage } from '../utils/telegram'
+import { sendMessage, sendDebugMessage } from '../utils/telegram'
 
 type side = "buy" | "sell"
 const defaultAccount = new ccxt.bybit()
@@ -68,7 +68,7 @@ export const openTrade = async (rawPair: string, side: side, tradeLeverage: numb
             })
         } else {
             console.log(`No market for ${rawPair}`)
-            sendMessage(`No market for ${rawPair}`)
+            sendDebugMessage(`No market for ${rawPair}`)
             return
         }
     }
@@ -93,9 +93,11 @@ export const closeTrade = async (rawPair: string) => {
                 const side = openTrade.side === 'buy' ? 'sell' : 'buy'
                 await account.createMarketOrder(pair, side, openTrade.size, undefined, { reduce_only: true })
                 let percent = (Number(price.last) - openTrade.entryPrice) / Number(price.last) * 100 * openTrade.leverage
+                const fees = openTrade.size * openTrade.entryPrice * 0.0006 + openTrade.size * Number(price.last) * 0.0006
                 if (side === 'buy') {
                     percent = -percent
                 }
+                const pnl = openTrade.size * openTrade.entryPrice * percent / 100 - fees
                 const win = percent > 0 ? true : false
                 await prisma.trades.update({
                     where: { id: openTrade.id },
@@ -107,7 +109,7 @@ export const closeTrade = async (rawPair: string) => {
                     }
                 })
                 console.log('trade closed')
-                sendMessage(`Clotûre de trade ! ${win ? '✅' : '❌'}%0ACrypto: ${openTrade.pair}%0ATrade: ${openTrade.side === 'buy' ? 'LONG 🟢' : 'SHORT 🔴'} x${openTrade.leverage}%0APrix d'entrée: ${openTrade.entryPrice}%0APrix de clôture: ${price.last}$%0A${win ? 'Gain' : 'Perte'}: ${percent}%`)
+                sendMessage(`Clotûre de trade ! ${win ? '✅' : '❌'}%0ACrypto: ${openTrade.pair}%0ATrade: ${openTrade.side === 'buy' ? 'LONG 🟢' : 'SHORT 🔴'} x${openTrade.leverage}%0APrix d'entrée: ${openTrade.entryPrice}$%0APrix de clôture: ${price.last}$%0APNL: ${pnl}$%0A${win ? 'Gain' : 'Perte'}: ${percent}%`)
             }
         } catch (error) {
             throw error

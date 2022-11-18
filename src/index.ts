@@ -2,7 +2,7 @@ import { Server } from "socket.io"
 import { PORT } from './config'
 import { createAccount, loadAccounts, removeAccount } from "./controllers/account"
 import { closeTrade, openTrade } from "./controllers/onTrade"
-import { sendMessage } from "./utils/telegram"
+import { sendDebugMessage } from "./utils/telegram"
 
 const startServer = async () => {
     try {
@@ -19,11 +19,11 @@ io.listen(PORT)
 
 io.on('connection', (socket) => {
     console.log(`connect ${socket.id}`)
-    sendMessage(`connect ${socket.id}`)
+    sendDebugMessage(`connect ${socket.id}`)
 
     socket.on("disconnect", (reason) => {
         console.log(`disconnect ${socket.id} due to ${reason}`)
-        sendMessage(`disconnect ${socket.id} due to ${reason}`)
+        sendDebugMessage(`disconnect ${socket.id} due to ${reason}`)
     })
 
     socket.on('message', (msg: string) => {
@@ -50,13 +50,13 @@ io.on('connection', (socket) => {
 
     socket.on('addAccount', (account) => {
         console.log('Nouveau compte', account)
-        sendMessage(`Nouveau compte`)
+        sendDebugMessage(`Nouveau compte`)
         createAccount(account.api, account.secret)
     })
 
     socket.on('deleteAccount', (account) => {
         console.log('Suppression compte', account)
-        sendMessage(`Suppression compte`)
+        sendDebugMessage(`Suppression compte`)
         removeAccount(account.api)
     })
 })
