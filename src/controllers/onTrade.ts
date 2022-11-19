@@ -97,7 +97,7 @@ export const closeTrade = async (rawPair: string) => {
                 if (side === 'buy') {
                     percent = -percent
                 }
-                const pnl = openTrade.size * openTrade.entryPrice * percent / 100 - fees
+                const pnl = openTrade.size / openTrade.leverage * openTrade.entryPrice * percent / 100 - fees
                 const win = percent > 0 ? true : false
                 await prisma.trades.update({
                     where: { id: openTrade.id },
@@ -109,7 +109,7 @@ export const closeTrade = async (rawPair: string) => {
                     }
                 })
                 console.log('trade closed')
-                sendMessage(`Clotûre de trade ! ${win ? '✅' : '❌'}%0ACrypto: ${openTrade.pair}%0ATrade: ${openTrade.side === 'buy' ? 'LONG 🟢' : 'SHORT 🔴'} x${openTrade.leverage}%0APrix d'entrée: ${openTrade.entryPrice}$%0APrix de clôture: ${price.last}$%0APNL: ${pnl}$%0A${win ? 'Gain' : 'Perte'}: ${percent}%`)
+                sendMessage(`Clotûre de trade ! ${win ? '✅' : '❌'}%0ACrypto: ${openTrade.pair}%0ATrade: ${openTrade.side === 'buy' ? 'LONG 🟢' : 'SHORT 🔴'} x${openTrade.leverage}%0APrix d'entrée: ${openTrade.entryPrice}$%0APrix de clôture: ${price.last}$%0APNL: ${pnl.toFixed(2)}$%0A${win ? 'Gain' : 'Perte'}: ${percent.toFixed(2)}%`)
             }
         } catch (error) {
             throw error
