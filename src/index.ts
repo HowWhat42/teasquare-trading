@@ -1,12 +1,13 @@
 import { Server } from "socket.io"
 import { PORT } from './config'
-import { createAccount, loadAccounts, removeAccount } from "./controllers/account"
+import { accounts, checkBalance, createAccount, loadAccounts, removeAccount } from "./controllers/account"
 import { closeTrade, openTrade } from "./controllers/onTrade"
 import { sendDebugMessage } from "./utils/telegram"
 
 const startServer = async () => {
     try {
         await loadAccounts()
+        console.log(await checkBalance(accounts[0], 'USDT'))
         console.log('Accounts loaded')
     } catch (error) {
         console.log(error)
