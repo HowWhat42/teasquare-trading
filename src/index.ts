@@ -7,7 +7,9 @@ import { sendDebugMessage } from "./utils/telegram"
 const startServer = async () => {
     try {
         await loadAccounts()
-        console.log(await checkBalance(accounts[0], 'USDT'))
+        console.log(accounts.length)
+        // console.log(await accounts[0].fetchOrders('ETHUSDT'))
+        console.log(await accounts[0].fetchPositions(['XRPUSDT']))
         console.log('Accounts loaded')
     } catch (error) {
         console.log(error)
