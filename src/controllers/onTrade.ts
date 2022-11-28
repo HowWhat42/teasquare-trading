@@ -105,7 +105,8 @@ export const closeTrade = async (rawPair: string) => {
                         open: false,
                         closingPrice: Number(price.last),
                         percent,
-                        win
+                        win,
+                        updatedAt: new Date(Date.now())
                     }
                 })
                 console.log('trade closed')
