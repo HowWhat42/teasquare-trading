@@ -17,10 +17,11 @@ export const openTrade = async (rawPair: string, side: side, tradeLeverage: numb
             const pair = `${symbol}USDT`
             accounts.map(async (account) => {
                 try {
-                    const credentials = await prisma.credentials.findMany({ where: { api: account.apiKey } })
+                    const credentials = await prisma.credentials.findFirst({ where: { api: account.apiKey } })
+                    if (!credentials) return
                     const openTrades = await prisma.trades.findMany({
                         where: {
-                            credentialId: Number(credentials[0].id),
+                            credentialId: Number(credentials.id),
                             pair,
                             open: true
                         }
@@ -30,7 +31,7 @@ export const openTrade = async (rawPair: string, side: side, tradeLeverage: numb
                         return
                     }
                     const usdtBalance = await checkBalance(account, 'USDT')
-                    const bankrollSize = credentials[0].bankrollPercentage / 100
+                    const bankrollSize = credentials.bankrollPercentage / 100
                     const positionSize = usdtBalance.total * bankrollSize
                     const price = await defaultAccount.fetchTicker(pair)
                     const quantity = Number((positionSize / Number(price.last)).toFixed(3))
@@ -44,9 +45,9 @@ export const openTrade = async (rawPair: string, side: side, tradeLeverage: numb
                     }
                     console.log('Enough USDT to open trade')
                     let leverage = tradeLeverage
-                    if (tradeLeverage > credentials[0].maxLeverage) {
+                    if (tradeLeverage > credentials.maxLeverage) {
                         console.log('Leverage is too high')
-                        leverage = credentials[0].maxLeverage
+                        leverage = credentials.maxLeverage
                     }
                     await setLeverage(account, pair, leverage)
 
@@ -58,10 +59,11 @@ export const openTrade = async (rawPair: string, side: side, tradeLeverage: numb
                             size: trade.amount,
                             entryPrice: Number(price.last),
                             side,
-                            credentialId: credentials[0].id
+                            credentialId: credentials.id
                         }
                     })
                     console.log('trade open')
+                    sendMessage(`Ouverture de trade !%0ACrypto: ${pair}%0ATrade: ${side === 'buy' ? 'LONG 🟢' : 'SHORT 🔴'} x${leverage}%0APrix d'entrée: ${price.last}$`)
                 } catch (error) {
                     throw error
                 }
@@ -79,10 +81,11 @@ export const closeTrade = async (rawPair: string) => {
     const pair = `${symbol}USDT`
     accounts.map(async (account) => {
         try {
-            const credentials = await prisma.credentials.findMany({ where: { api: account.apiKey } })
+            const credentials = await prisma.credentials.findFirst({ where: { api: account.apiKey } })
+            if (!credentials) return
             const openTrades = await prisma.trades.findMany({
                 where: {
-                    credentialId: Number(credentials[0].id),
+                    credentialId: Number(credentials.id),
                     pair,
                     open: true
                 }
