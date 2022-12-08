@@ -63,9 +63,9 @@ export const openTrade = async (rawPair: string, side: side, tradeLeverage: numb
                         }
                     })
                     console.log('trade open')
-                    sendMessage(`Ouverture de trade !%0ACrypto: ${pair}%0ATrade: ${side === 'buy' ? 'LONG 🟢' : 'SHORT 🔴'} x${leverage}%0APrix d'entrée: ${price.last}$`)
+                    sendMessage(`Ouverture de trade !%0ACompte: ${credentials.name}%0ACrypto: ${pair}%0ATrade: ${side === 'buy' ? 'LONG 🟢' : 'SHORT 🔴'} x${leverage}%0APrix d'entrée: ${price.last}$`)
                 } catch (error) {
-                    throw error
+                    console.log(error)
                 }
             })
         } else {
@@ -116,7 +116,7 @@ export const closeTrade = async (rawPair: string) => {
                 sendMessage(`Clotûre de trade ! ${win ? '✅' : '❌'}%0ACrypto: ${openTrade.pair}%0ATrade: ${openTrade.side === 'buy' ? 'LONG 🟢' : 'SHORT 🔴'} x${openTrade.leverage}%0APrix d'entrée: ${openTrade.entryPrice}$%0APrix de clôture: ${price.last}$%0APNL: ${pnl.toFixed(2)}$%0A${win ? 'Gain' : 'Perte'}: ${percent.toFixed(2)}%`)
             }
         } catch (error) {
-            throw error
+            console.log(error)
         }
     })
 }
