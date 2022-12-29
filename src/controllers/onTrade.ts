@@ -15,7 +15,8 @@ export const openTrade = async (rawPair: string, side: side, tradeLeverage: numb
         if (market) {
             const limit = Number(market?.limits?.amount?.min)
             const pair = `${symbol}USDT`
-            accounts.map(async (account) => {
+            for (let i = 0; i < accounts.length; i++) {
+                const account = accounts[i];
                 try {
                     const credentials = await prisma.credentials.findFirst({ where: { api: account.apiKey } })
                     if (!credentials) return
@@ -66,8 +67,9 @@ export const openTrade = async (rawPair: string, side: side, tradeLeverage: numb
                     sendMessage(`Ouverture de trade !%0ACompte: ${credentials.name}%0ACrypto: ${pair}%0ATrade: ${side === 'buy' ? 'LONG 🟢' : 'SHORT 🔴'} x${leverage}%0APrix d'entrée: ${price.last}$`)
                 } catch (error) {
                     console.log(error)
+                    continue
                 }
-            })
+            }
         } else {
             console.log(`No market for ${rawPair}`)
             sendDebugMessage(`No market for ${rawPair}`)
@@ -79,7 +81,8 @@ export const openTrade = async (rawPair: string, side: side, tradeLeverage: numb
 export const closeTrade = async (rawPair: string) => {
     const symbol = rawPair.split('USDT')[0].split('BUSD')[0]
     const pair = `${symbol}USDT`
-    accounts.map(async (account) => {
+    for (let i = 0; i < accounts.length; i++) {
+        const account = accounts[i];
         try {
             const credentials = await prisma.credentials.findFirst({ where: { api: account.apiKey } })
             if (!credentials) return
@@ -117,6 +120,7 @@ export const closeTrade = async (rawPair: string) => {
             }
         } catch (error) {
             console.log(error)
+            continue
         }
-    })
+    }
 }
