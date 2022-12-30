@@ -31,11 +31,12 @@ model traders {
   id        Int         @id @default(autoincrement())
   name      String?     @db.VarChar(255)
   url       String?     @db.VarChar(255)
-  telegram  Boolean     @default(false)
-  bybit     Boolean     @default(false)
   createdAt DateTime    @default(now())
   updatedAt DateTime    @default(now())
+  bybit     Boolean     @default(false)
+  telegram  Boolean     @default(false)
   positions positions[]
+  trades    trades[]
 }
 
 model credentials {
@@ -43,11 +44,11 @@ model credentials {
   name               String   @db.VarChar(255)
   api                String   @db.VarChar(255)
   secret             String   @db.VarChar(255)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @default(now())
   active             Boolean  @default(false)
   bankrollPercentage Int      @default(5)
   maxLeverage        Int      @default(1)
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @default(now())
   trades             trades[]
 }
 
@@ -78,5 +79,10 @@ model trades {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @default(now())
   credentialId Int?
+  traderId     Int?
   credentials  credentials? @relation(fields: [credentialId], references: [id], map: "trades_ibfk_1")
+  traders      traders?     @relation(fields: [traderId], references: [id], map: "trades_ibfk_2")
+
+  @@index([credentialId], map: "trades_ibfk_1")
+  @@index([traderId], map: "trades_ibfk_2")
 }
