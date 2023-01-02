@@ -24,11 +24,12 @@ export const openTrade = async (rawPair: string, side: side, tradeLeverage: numb
                         where: {
                             credentialId: Number(credentials.id),
                             pair,
-                            open: true
+                            open: true,
+                            traderId
                         }
                     })
                     if (openTrades.length > 0) {
-                        console.log('Trade already open on this pair')
+                        console.log('Trade already open on this pair with this trader')
                         return
                     }
                     const usdtBalance = await checkBalance(account, 'USDT')
@@ -92,7 +93,8 @@ export const closeTrade = async (rawPair: string, traderId: number) => {
                 where: {
                     credentialId: Number(credentials.id),
                     pair,
-                    open: true
+                    open: true,
+                    traderId
                 }
             })
             if (openTrades.length > 0) {

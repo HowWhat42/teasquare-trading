@@ -28,10 +28,10 @@ export const checkBalance = async (account: ccxt.bybit, symbol: string) => {
 
 export const setLeverage = async (account: ccxt.bybit, symbol: string, value: number) => {
     try {
-        await account.privatePostPrivateLinearPositionSetLeverage({ symbol, buy_leverage: value, sell_leverage: value })
+        await account.privatePostPrivateLinearPositionSwitchMode({ symbol, mode: 'BothSide' })
     } catch (error: any) {
-        if (error.message.includes('leverage not modified')) {
-            console.log('Leverage not modified')
+        if (error.message.includes('position mode not modified')) {
+            console.log('Position mode not modified')
         } else {
             throw new BadRequest(error.message)
         }
@@ -39,17 +39,17 @@ export const setLeverage = async (account: ccxt.bybit, symbol: string, value: nu
     try {
         await account.privatePostPrivateLinearPositionSwitchIsolated({ symbol, is_isolated: true, buy_leverage: value, sell_leverage: value })
     } catch (error: any) {
-        if (error.message.includes('Isolated not modified')) {
+        if (error.message.includes('isolated not modified')) {
             console.log('Isolated not modified')
         } else {
             throw new BadRequest(error.message)
         }
     }
     try {
-        await account.privatePostPrivateLinearPositionSwitchMode({ symbol, mode: 'BothSide' })
+        await account.privatePostPrivateLinearPositionSetLeverage({ symbol, buy_leverage: value, sell_leverage: value })
     } catch (error: any) {
-        if (error.message.includes('position mode not modified')) {
-            console.log('Position mode not modified')
+        if (error.message.includes('leverage not modified')) {
+            console.log('Leverage not modified')
         } else {
             throw new BadRequest(error.message)
         }
