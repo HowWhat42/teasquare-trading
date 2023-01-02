@@ -2,7 +2,7 @@ import { accounts, checkBalance, setLeverage } from "./account"
 import { prisma } from '../config'
 import ccxt from 'ccxt'
 import { sendMessage, sendDebugMessage } from '../utils/telegram'
-import { addRow } from "../utils/googleapi"
+import { addRow, updateDailyCell } from "../utils/googleapi"
 
 type side = "buy" | "sell"
 const defaultAccount = new ccxt.bybit()
@@ -119,13 +119,9 @@ export const closeTrade = async (rawPair: string, traderId: number) => {
                 console.log('trade closed')
                 const sideText = openTrade.side === 'buy' ? 'LONG 🟢' : 'SHORT 🔴'
                 sendMessage(`Clotûre de trade ! ${win ? '✅' : '❌'}%0ACompte: ${credentials.name}%0ACrypto: ${openTrade.pair}%0ATrade: ${sideText} x${openTrade.leverage}%0APrix d'entrée: ${openTrade.entryPrice}$%0APrix de clôture: ${price.last}$%0APNL: ${pnl.toFixed(2)}$%0A${win ? 'Gain' : 'Perte'}: ${percent.toFixed(2)}%`)
-                // if (credentials.name === "HowWhat") {
-                //     const winText = win ? 'Gain' : 'Perte'
-                //     const trader = await prisma.traders.findUnique(traderId)
-                //     const invested = openTrade.entryPrice * openTrade.size / openTrade.leverage
-                //     const formatedDate = new Intl.DateTimeFormat('fr-FR').format(new Date(Date.now()))
-                //     await addRow([formatedDate, openTrade.pair, openTrade.leverage, openTrade.size, invested, sideText, openTrade.entryPrice, price.last, winText, pnl, percent, trader?.name])
-                // }
+                if (credentials.name === "TheBilster") {
+                    await updateDailyCell(percent)
+                }
             }
         } catch (error) {
             console.log(error)

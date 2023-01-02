@@ -2,7 +2,6 @@ import { Server } from "socket.io"
 import { PORT } from './config'
 import { createAccount, loadAccounts, removeAccount, checkBalance, accounts, setLeverage } from "./controllers/account"
 import { closeTrade, openTrade } from "./controllers/onTrade"
-import { addRow, getSheet } from "./utils/googleapi"
 import { sendDebugMessage } from "./utils/telegram"
 
 const startServer = async () => {

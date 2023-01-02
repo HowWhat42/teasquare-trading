@@ -30,3 +30,18 @@ export const addRow = async (data: any[]) => {
     const range = 'Feuille 1!A2:L2'
     await sheets.spreadsheets.values.append({ spreadsheetId, range, valueInputOption: 'RAW', requestBody: { values: [data] } })
 }
+
+export const updateDailyCell = async (percent: number) => {
+    const sheets = await initSheet()
+    const date = new Date()
+    const letters = 'BCDEFGHIJKLM'
+    const monthLetter = letters[date.getMonth()]
+    const cell = date.getDate() + 2
+    const range = `2023!${monthLetter}${cell}`
+    const rawCell = await sheets.spreadsheets.values.get({ spreadsheetId, range })
+    let oldData = 0
+    if (rawCell.data.values) {
+        oldData = parseFloat(rawCell.data.values[0][0]) / 100
+    }
+    await sheets.spreadsheets.values.update({ spreadsheetId, range, valueInputOption: 'RAW', requestBody: { values: [[oldData + percent]] } })
+}
