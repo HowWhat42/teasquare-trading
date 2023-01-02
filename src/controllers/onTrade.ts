@@ -16,8 +16,7 @@ export const openTrade = async (rawPair: string, side: side, tradeLeverage: numb
         if (market) {
             const limit = Number(market?.limits?.amount?.min)
             const pair = `${symbol}USDT`
-            for (let i = 0; i < accounts.length; i++) {
-                const account = accounts[i];
+            accounts.forEach(async (account) => {
                 try {
                     const credentials = await prisma.credentials.findFirst({ where: { api: account.apiKey } })
                     if (!credentials) return
@@ -70,9 +69,8 @@ export const openTrade = async (rawPair: string, side: side, tradeLeverage: numb
                     sendMessage(`Ouverture de trade !%0ACompte: ${credentials.name}%0ACrypto: ${pair}%0ATrade: ${side === 'buy' ? 'LONG 🟢' : 'SHORT 🔴'} x${leverage}%0APrix d'entrée: ${price.last}$`)
                 } catch (error) {
                     console.log(error)
-                    continue
                 }
-            }
+            })
         } else {
             console.log(`No market for ${rawPair}`)
             sendDebugMessage(`No market for ${rawPair}`)
@@ -84,8 +82,7 @@ export const openTrade = async (rawPair: string, side: side, tradeLeverage: numb
 export const closeTrade = async (rawPair: string, traderId: number) => {
     const symbol = rawPair.split('USDT')[0].split('BUSD')[0]
     const pair = `${symbol}USDT`
-    for (let i = 0; i < accounts.length; i++) {
-        const account = accounts[i];
+    accounts.forEach(async (account) => {
         try {
             const credentials = await prisma.credentials.findFirst({ where: { api: account.apiKey } })
             if (!credentials) return
@@ -121,18 +118,17 @@ export const closeTrade = async (rawPair: string, traderId: number) => {
                 })
                 console.log('trade closed')
                 const sideText = openTrade.side === 'buy' ? 'LONG 🟢' : 'SHORT 🔴'
-                sendMessage(`Clotûre de trade ! ${win ? '✅' : '❌'}%0ACrypto: ${openTrade.pair}%0ATrade: ${sideText} x${openTrade.leverage}%0APrix d'entrée: ${openTrade.entryPrice}$%0APrix de clôture: ${price.last}$%0APNL: ${pnl.toFixed(2)}$%0A${win ? 'Gain' : 'Perte'}: ${percent.toFixed(2)}%`)
-                if (credentials.name === "HowWhat") {
-                    const winText = win ? 'Gain' : 'Perte'
-                    const trader = await prisma.traders.findUnique({ where: { id: traderId } })
-                    const invested = openTrade.entryPrice * openTrade.size / openTrade.leverage
-                    const formatedDate = new Intl.DateTimeFormat('fr-FR').format(new Date(Date.now()))
-                    await addRow([formatedDate, openTrade.pair, openTrade.leverage, openTrade.size, invested, sideText, openTrade.entryPrice, price.last, winText, pnl, percent, trader?.name])
-                }
+                sendMessage(`Clotûre de trade ! ${win ? '✅' : '❌'}%0ACompte: ${credentials.name}%0ACrypto: ${openTrade.pair}%0ATrade: ${sideText} x${openTrade.leverage}%0APrix d'entrée: ${openTrade.entryPrice}$%0APrix de clôture: ${price.last}$%0APNL: ${pnl.toFixed(2)}$%0A${win ? 'Gain' : 'Perte'}: ${percent.toFixed(2)}%`)
+                // if (credentials.name === "HowWhat") {
+                //     const winText = win ? 'Gain' : 'Perte'
+                //     const trader = await prisma.traders.findUnique(traderId)
+                //     const invested = openTrade.entryPrice * openTrade.size / openTrade.leverage
+                //     const formatedDate = new Intl.DateTimeFormat('fr-FR').format(new Date(Date.now()))
+                //     await addRow([formatedDate, openTrade.pair, openTrade.leverage, openTrade.size, invested, sideText, openTrade.entryPrice, price.last, winText, pnl, percent, trader?.name])
+                // }
             }
         } catch (error) {
             console.log(error)
-            continue
         }
-    }
+    })
 }
