@@ -122,7 +122,7 @@ export const closeTrade = async (rawPair: string, traderId: number) => {
                 const sideText = openTrade.side === 'buy' ? 'LONG 🟢' : 'SHORT 🔴'
                 sendMessage(`Clotûre de trade ! ${win ? '✅' : '❌'}%0ACompte: ${credentials.name}%0ACrypto: ${openTrade.pair}%0ATrade: ${sideText} x${openTrade.leverage}%0APrix d'entrée: ${openTrade.entryPrice}$%0APrix de clôture: ${price.last}$%0APNL: ${pnl.toFixed(2)}$%0A${win ? 'Gain' : 'Perte'}: ${percent.toFixed(2)}%`)
                 if (credentials.name === "TheBilster") {
-                    await updateDailyCell(percent)
+                    await updateDailyCell(percent / 100 * (credentials.bankrollPercentage / 100))
                 }
             }
         } catch (error) {
