@@ -80,6 +80,7 @@ model trades {
   updatedAt    DateTime     @default(now())
   credentialId Int?
   traderId     Int?
+  status       String       @default("sent")
   credentials  credentials? @relation(fields: [credentialId], references: [id], map: "trades_ibfk_1")
   traders      traders?     @relation(fields: [traderId], references: [id], map: "trades_ibfk_2")
 

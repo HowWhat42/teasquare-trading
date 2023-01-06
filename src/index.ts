@@ -1,6 +1,6 @@
 import { Server } from "socket.io"
 import { PORT } from './config'
-import { createAccount, loadAccounts, removeAccount, checkBalance, accounts, setLeverage } from "./controllers/account"
+import { createAccount, loadAccounts, removeAccount, checkBalance, accounts, setLeverage, watchTrades } from "./controllers/account"
 import { closeTrade, openTrade } from "./controllers/onTrade"
 import { sendDebugMessage } from "./utils/telegram"
 
@@ -8,7 +8,8 @@ const startServer = async () => {
     try {
         await loadAccounts()
         console.log('Accounts loaded')
-        // await setLeverage(accounts[1], 'ICPUSDT', 6)
+        accounts.map(account => watchTrades(account))
+        // await setLeverage(accounts[1], 'OCEANUSDT', 4)
         // const positions = await accounts[1].privateGetPrivateLinearPositionList({ symbol: 'ICPUSDT' })
         // console.log(positions)
         // const balance = await accounts[1].privateGetV2PrivateWalletBalance({ coin: 'USDT' })
