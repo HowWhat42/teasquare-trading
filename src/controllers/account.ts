@@ -39,7 +39,7 @@ export const setLeverage = async (account: ccxt.bybit, symbol: string, value: nu
     try {
         await account.privatePostPrivateLinearPositionSwitchIsolated({ symbol, is_isolated: true, buy_leverage: value, sell_leverage: value })
     } catch (error: any) {
-        if (error.message.includes('isolated not modified')) {
+        if (error.message.includes('Isolated not modified')) {
             console.log('Isolated not modified')
         } else {
             throw new BadRequest(error.message)
