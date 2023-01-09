@@ -51,12 +51,11 @@ export const openTrade = async (rawPair: string, side: side, tradeLeverage: numb
                     }
                     await setLeverage(account, pair, leverage)
 
-                    const order = await account.createMarketOrder(pair, side, quantity * leverage)
                     const savedTrade = await prisma.trades.create({
                         data: {
                             pair,
                             leverage,
-                            size: order.amount,
+                            size: quantity * leverage,
                             entryPrice: price.last,
                             side,
                             credentialId: credentials.id,
@@ -66,6 +65,7 @@ export const openTrade = async (rawPair: string, side: side, tradeLeverage: numb
                             credentials: true
                         }
                     })
+                    const order = await account.createMarketOrder(pair, side, quantity * leverage)
                     await newTrade(account, order, savedTrade)
                     console.log('trade sent')
                 } catch (error) {
