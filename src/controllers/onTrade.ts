@@ -66,7 +66,7 @@ export const openTrade = async (rawPair: string, side: side, tradeLeverage: numb
                             credentials: true
                         }
                     })
-                    newTrade(account, order, savedTrade)
+                    await newTrade(account, order, savedTrade)
                     console.log('trade sent')
                 } catch (error) {
                     console.log(error)

@@ -87,7 +87,7 @@ const handleTrade = async (api: string, trade: ccxt.Trade) => {
 }
 
 export const newTrade = async (account: ccxt.pro.bybit, order: ccxt.Order, openTrade: (trades & { credentials: credentials | null })) => {
-    while (order.status === "open") {
+    while (order.status !== "closed") {
         order = await account.fetchOrder(order.id, openTrade.pair);
     }
     await prisma.trades.updateMany({
