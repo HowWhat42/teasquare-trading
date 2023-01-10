@@ -1,6 +1,7 @@
 import { accounts, checkBalance, newTrade, setLeverage } from "./account"
 import { prisma } from '../config'
 import ccxt from 'ccxt'
+import { sendMessage } from "../utils/telegram"
 
 type side = "buy" | "sell"
 const defaultAccount = new ccxt.bybit()
@@ -68,6 +69,7 @@ export const openTrade = async (rawPair: string, side: side, tradeLeverage: numb
                     })
                     await newTrade(account, order, savedTrade)
                     console.log('trade sent')
+                    sendMessage(`Ouverture de trade !%0ACompte: ${credentials.name}%0ACrypto: ${savedTrade.pair}%0ATrade: ${savedTrade.side === 'buy' ? 'LONG 🟢' : 'SHORT 🔴'} x${savedTrade.leverage}%0APrix d'entrée: ${savedTrade.entryPrice}$`)
                 } catch (error) {
                     console.log(error)
                 }

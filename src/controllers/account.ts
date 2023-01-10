@@ -79,7 +79,8 @@ export const watchTrades = async (account: ccxt.pro.bybit) => {
 }
 
 const handleTrade = async (api: string, trade: ccxt.Trade) => {
-    const openTrade = await prisma.trades.findFirst({ where: { credentials: { api }, pair: trade.info.symbol, open: true }, include: { credentials: true } })
+    const closeSide = trade.side === "buy" ? "sell" : "buy"
+    const openTrade = await prisma.trades.findFirst({ where: { credentials: { api }, side: closeSide, pair: trade.info.symbol, open: true }, include: { credentials: true } })
     if (!openTrade) return
     closeTrade(api, trade, openTrade)
 }
@@ -106,7 +107,6 @@ export const newTrade = async (account: ccxt.pro.bybit, baseOrder: ccxt.Order, o
     })
     console.log('trade filled')
     if (!openTrade.credentials) return
-    sendMessage(`Ouverture de trade !%0ACompte: ${openTrade.credentials.name}%0ACrypto: ${openTrade.pair}%0ATrade: ${openTrade.side === 'buy' ? 'LONG 🟢' : 'SHORT 🔴'} x${openTrade.leverage}%0APrix d'entrée: ${order.average}$`)
 }
 
 const closeTrade = async (api: string, trade: ccxt.Trade, openTrade: (trades & { credentials: credentials | null })) => {
