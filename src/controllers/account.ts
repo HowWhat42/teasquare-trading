@@ -70,7 +70,7 @@ export const watchTrades = async (account: ccxt.pro.bybit) => {
                 break
             }
             const trades = await accounts[accountIndex].watchMyTrades()
-            
+
             handleTrade(accounts[accountIndex].apiKey, trades[0])
         } catch (error) {
             console.log(error)
@@ -79,15 +79,14 @@ export const watchTrades = async (account: ccxt.pro.bybit) => {
 }
 
 const handleTrade = async (api: string, trade: ccxt.Trade) => {
-    const openTrade = await prisma.trades.findFirst({ where: { credentials: { api }, pair: trade.info.symbol, open: true }, include: { credentials: true }})
+    const openTrade = await prisma.trades.findFirst({ where: { credentials: { api }, pair: trade.info.symbol, open: true }, include: { credentials: true } })
     if (!openTrade) return
-    if (openTrade.status === "filled") {
-        closeTrade(api, trade, openTrade)
-    }
+    closeTrade(api, trade, openTrade)
 }
 
-export const newTrade = async (account: ccxt.pro.bybit, order: ccxt.Order, openTrade: (trades & { credentials: credentials | null })) => {
-    while (order.status !== "closed") {
+export const newTrade = async (account: ccxt.pro.bybit, baseOrder: ccxt.Order, openTrade: (trades & { credentials: credentials | null })) => {
+    let order = baseOrder
+    while (order.status === "open") {
         order = await account.fetchOrder(order.id, openTrade.pair);
     }
     await prisma.trades.updateMany({
@@ -125,7 +124,7 @@ const closeTrade = async (api: string, trade: ccxt.Trade, openTrade: (trades & {
             open: true,
             credentials: {
                 api
-            } 
+            }
         },
         data: {
             open: false,
@@ -138,9 +137,9 @@ const closeTrade = async (api: string, trade: ccxt.Trade, openTrade: (trades & {
     })
     const sideText = openTrade.side === 'buy' ? 'LONG 🟢' : 'SHORT 🔴'
     console.log('trade closed')
-    if(!openTrade.credentials) return
+    if (!openTrade.credentials) return
     sendMessage(`Clotûre de trade ! ${win ? '✅' : '❌'}%0ACompte: ${openTrade.credentials.name}%0ACrypto: ${openTrade.pair}%0ATrade: ${sideText} x${openTrade.leverage}%0APrix d'entrée: ${openTrade.entryPrice}$%0APrix de clôture: ${price}$%0APNL: ${pnl.toFixed(2)}$%0A${win ? 'Gain' : 'Perte'}: ${percent.toFixed(2)}%`)
-    
+
     if (openTrade.credentials.name === "TheBilster") {
         await updateDailyCell(percent / 100 * (openTrade.credentials.bankrollPercentage / 100))
     }

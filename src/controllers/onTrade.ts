@@ -14,7 +14,7 @@ export const openTrade = async (rawPair: string, side: side, tradeLeverage: numb
         if (market) {
             const limit = Number(market?.limits?.amount?.min)
             const pair = `${symbol}USDT`
-            accounts.forEach(async (account) => {
+            const orders = accounts.map(async (account) => {
                 try {
                     const credentials = await prisma.credentials.findFirst({ where: { api: account.apiKey } })
                     if (!credentials) return
@@ -51,11 +51,12 @@ export const openTrade = async (rawPair: string, side: side, tradeLeverage: numb
                     }
                     await setLeverage(account, pair, leverage)
 
+                    const order = await account.createMarketOrder(pair, side, quantity * leverage)
                     const savedTrade = await prisma.trades.create({
                         data: {
                             pair,
                             leverage,
-                            size: quantity * leverage,
+                            size: order.amount,
                             entryPrice: price.last,
                             side,
                             credentialId: credentials.id,
@@ -65,13 +66,13 @@ export const openTrade = async (rawPair: string, side: side, tradeLeverage: numb
                             credentials: true
                         }
                     })
-                    const order = await account.createMarketOrder(pair, side, quantity * leverage)
                     await newTrade(account, order, savedTrade)
                     console.log('trade sent')
                 } catch (error) {
                     console.log(error)
                 }
             })
+            await Promise.all(orders)
         } else {
             console.log(`No market for ${rawPair}`)
             return
@@ -82,7 +83,7 @@ export const openTrade = async (rawPair: string, side: side, tradeLeverage: numb
 export const closeTrade = async (rawPair: string, traderId: number) => {
     const symbol = rawPair.split('USDT')[0].split('BUSD')[0]
     const pair = `${symbol}USDT`
-    accounts.forEach(async (account) => {
+    const orders = accounts.map(async (account) => {
         try {
             const credentials = await prisma.credentials.findFirst({ where: { api: account.apiKey } })
             if (!credentials) return
@@ -90,10 +91,9 @@ export const closeTrade = async (rawPair: string, traderId: number) => {
             if (!price.last) return
             const openTrades = await prisma.trades.findMany({
                 where: {
-                    credentialId: Number(credentials.id),
+                    credentialId: credentials.id,
                     pair,
                     open: true,
-                    status: "filled",
                     traderId
                 }
             })
@@ -106,4 +106,5 @@ export const closeTrade = async (rawPair: string, traderId: number) => {
             console.log(error)
         }
     })
+    await Promise.all(orders)
 }
