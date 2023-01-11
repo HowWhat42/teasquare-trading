@@ -67,8 +67,8 @@ export const openTrade = async (rawPair: string, side: side, tradeLeverage: numb
                             credentials: true
                         }
                     })
-                    await newTrade(account, order, savedTrade)
                     console.log('trade sent')
+                    await newTrade(account, order, savedTrade)
                     sendMessage(`Ouverture de trade !%0ACompte: ${credentials.name}%0ACrypto: ${savedTrade.pair}%0ATrade: ${savedTrade.side === 'buy' ? 'LONG 🟢' : 'SHORT 🔴'} x${savedTrade.leverage}%0APrix d'entrée: ${savedTrade.entryPrice}$`)
                 } catch (error) {
                     console.log(error)

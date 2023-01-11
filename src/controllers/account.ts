@@ -89,15 +89,11 @@ export const newTrade = async (account: ccxt.pro.bybit, baseOrder: ccxt.Order, o
     try {
         let order = baseOrder
         while (order.status === "open") {
-            order = await account.fetchOrder(order.id, openTrade.pair);
+            order = await account.fetchOrder(order.id, order.symbol);
         }
-        await prisma.trades.updateMany({
+        await prisma.trades.update({
             where: {
-                pair: openTrade.pair,
-                open: true,
-                credentials: {
-                    api: openTrade.credentials?.api
-                }
+                id: openTrade.id
             },
             data: {
                 size: order.amount,
@@ -120,13 +116,9 @@ const closeTrade = async (api: string, trade: ccxt.Trade, openTrade: (trades & {
     }
     const pnl = trade.amount / openTrade.leverage * openTrade.entryPrice * percent / 100 - trade.fee.cost
     const win = percent > 0 ? true : false
-    await prisma.trades.updateMany({
+    await prisma.trades.update({
         where: {
-            pair: trade.info.symbol,
-            open: true,
-            credentials: {
-                api
-            }
+            id: openTrade.id
         },
         data: {
             open: false,
