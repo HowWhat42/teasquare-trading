@@ -15,10 +15,10 @@ export const openTrade = async (rawPair: string, side: side, tradeLeverage: numb
         if (market) {
             const limit = Number(market?.limits?.amount?.min)
             const pair = `${symbol}USDT`
-            for (const account of accounts) {
+            accounts.map(async account => {
                 try {
                     const credentials = await prisma.credentials.findFirst({ where: { api: account.apiKey } })
-                    if (!credentials) continue
+                    if (!credentials) return
                     const openTrades = await prisma.trades.findMany({
                         where: {
                             credentialId: Number(credentials.id),
@@ -28,21 +28,21 @@ export const openTrade = async (rawPair: string, side: side, tradeLeverage: numb
                     })
                     if (openTrades.length > 0) {
                         console.log('Trade already open on this pair with this trader')
-                        continue
+                        return
                     }
                     const usdtBalance = await checkBalance(account, 'USDT')
                     const bankrollSize = credentials.bankrollPercentage / 100
                     const positionSize = usdtBalance.total * bankrollSize
                     const price = await defaultAccount.fetchTicker(pair)
-                    if (!price.last) continue
+                    if (!price.last) return
                     const quantity = Number((positionSize / price.last).toFixed(3))
                     if (positionSize > usdtBalance.free) {
                         console.log('Not enough USDT to open trade')
-                        continue
+                        return
                     }
                     if (quantity < limit) {
                         console.log('Quantity is under limit')
-                        continue
+                        return
                     }
                     console.log('Enough USDT to open trade')
                     let leverage = tradeLeverage
@@ -72,9 +72,8 @@ export const openTrade = async (rawPair: string, side: side, tradeLeverage: numb
                     sendMessage(`Ouverture de trade !%0ACompte: ${credentials.name}%0ACrypto: ${savedTrade.pair}%0ATrade: ${savedTrade.side === 'buy' ? 'LONG 🟢' : 'SHORT 🔴'} x${savedTrade.leverage}%0APrix d'entrée: ${savedTrade.entryPrice}$`)
                 } catch (error) {
                     console.log(error)
-                    continue
                 }
-            }
+            })
         } else {
             console.log(`No market for ${rawPair}`)
             return
