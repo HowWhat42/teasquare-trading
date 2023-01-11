@@ -89,7 +89,11 @@ export const newTrade = async (account: ccxt.pro.bybit, baseOrder: ccxt.Order, o
     try {
         let order = baseOrder
         while (order.status === "open") {
-            order = await account.fetchOrder(order.id, order.symbol);
+            try {
+                order = await account.fetchOrder(order.id, order.symbol);
+            } catch (error) {
+                console.log(error)
+            }
         }
         await prisma.trades.update({
             where: {
