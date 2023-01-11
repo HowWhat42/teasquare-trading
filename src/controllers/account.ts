@@ -86,37 +86,39 @@ const handleTrade = async (api: string, trade: ccxt.Trade) => {
 }
 
 export const newTrade = async (account: ccxt.pro.bybit, baseOrder: ccxt.Order, openTrade: (trades & { credentials: credentials | null })) => {
-    let order = baseOrder
-    while (order.status === "open") {
-        order = await account.fetchOrder(order.id, openTrade.pair);
-    }
-    await prisma.trades.updateMany({
-        where: {
-            pair: openTrade.pair,
-            open: true,
-            credentials: {
-                api: openTrade.credentials?.api
-            }
-        },
-        data: {
-            size: order.amount,
-            entryPrice: order.average,
-            status: "filled",
-            updatedAt: new Date(Date.now())
+    try {
+        let order = baseOrder
+        while (order.status === "open") {
+            order = await account.fetchOrder(order.id, openTrade.pair);
         }
-    })
-    console.log('trade filled')
-    if (!openTrade.credentials) return
+        await prisma.trades.updateMany({
+            where: {
+                pair: openTrade.pair,
+                open: true,
+                credentials: {
+                    api: openTrade.credentials?.api
+                }
+            },
+            data: {
+                size: order.amount,
+                entryPrice: order.average,
+                status: "filled",
+                updatedAt: new Date(Date.now())
+            }
+        })
+        console.log('trade filled')
+    } catch (error) {
+        console.log(error)
+    }
 }
 
 const closeTrade = async (api: string, trade: ccxt.Trade, openTrade: (trades & { credentials: credentials | null })) => {
     const price = trade.price
     let percent = (price - openTrade.entryPrice) / price * 100 * openTrade.leverage
-    const fees = openTrade.size * openTrade.entryPrice * 0.0006 + openTrade.size * price * 0.0006
     if (trade.side === 'buy') {
         percent = -percent
     }
-    const pnl = openTrade.size / openTrade.leverage * openTrade.entryPrice * percent / 100 - fees
+    const pnl = trade.amount / openTrade.leverage * openTrade.entryPrice * percent / 100 - trade.fee.cost
     const win = percent > 0 ? true : false
     await prisma.trades.updateMany({
         where: {
@@ -131,6 +133,7 @@ const closeTrade = async (api: string, trade: ccxt.Trade, openTrade: (trades & {
             closingPrice: price,
             percent,
             win,
+            size: trade.amount,
             status: "closed",
             updatedAt: new Date(Date.now())
         }
@@ -141,6 +144,6 @@ const closeTrade = async (api: string, trade: ccxt.Trade, openTrade: (trades & {
     sendMessage(`Clotûre de trade ! ${win ? '✅' : '❌'}%0ACompte: ${openTrade.credentials.name}%0ACrypto: ${openTrade.pair}%0ATrade: ${sideText} x${openTrade.leverage}%0APrix d'entrée: ${openTrade.entryPrice}$%0APrix de clôture: ${price}$%0APNL: ${pnl.toFixed(2)}$%0A${win ? 'Gain' : 'Perte'}: ${percent.toFixed(2)}%`)
 
     if (openTrade.credentials.name === "TheBilster") {
-        await updateDailyCell(percent / 100 * (openTrade.credentials.bankrollPercentage / 100))
+        await updateDailyCell((percent / 100) * (openTrade.credentials.bankrollPercentage / 100))
     }
 }
