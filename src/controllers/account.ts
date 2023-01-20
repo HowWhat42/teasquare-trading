@@ -73,10 +73,15 @@ export class Account {
     }
 
     async handleTrade(trade: ccxt.Trade) {
-        const closeSide = trade.side === "buy" ? "sell" : "buy"
-        const openTrade = await prisma.trades.findFirst({ where: { credentials: { api: this.api }, side: closeSide, pair: trade.info.symbol, open: true }, include: { credentials: true } })
-        if (!openTrade) return
-        this.onClose(trade, openTrade)
+        try {
+            const closeSide = trade.side === "buy" ? "sell" : "buy"
+            const openTrade = await prisma.trades.findFirst({ where: { credentials: { api: this.api }, side: closeSide, pair: trade.info.symbol, open: true }, include: { credentials: true } })
+            console.log('trade received', trade)
+            if (!openTrade) return
+            this.onClose(trade, openTrade)
+        } catch (error) {
+            console.log(error)
+        }
     }
 
     async canOpenTrade(symbol: string, price: number, limit: number, bankrollPercentage: number, credentials: credentials) {

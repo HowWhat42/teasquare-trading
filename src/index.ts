@@ -54,7 +54,7 @@ io.on('connection', (socket) => {
     })
 
     socket.on('manualOpenTrade', async (trade) => {
-        console.log('Nouveau Signal Ouverture', trade)
+        console.log('Nouvelle Ouverture Manuelle', trade)
         try {
             await manualOpenTrade(trade.pair, trade.side, trade.leverage, trade.isolated, trade.bankrollPercentage, trade?.limitPrice, trade?.tp, trade?.sl)
         } catch (error) {
@@ -72,7 +72,7 @@ io.on('connection', (socket) => {
     })
 
     socket.on('manualCloseTrade', async (trade) => {
-        console.log('Nouveau Signal Clotûre', trade)
+        console.log('Nouvelle Clotûre Manuelle', trade)
         try {
             await closeTradeById(+trade.id)
         } catch (error) {
@@ -83,7 +83,7 @@ io.on('connection', (socket) => {
     socket.on('closeTrade', async (trade) => {
         console.log('Nouveau Signal Clotûre', trade)
         try {
-            await closeTrade(trade.pair, trade?.traderId)
+            await closeTrade(trade.pair, trade?.traderId ? +trade.traderId : undefined)
         } catch (error) {
             console.log(error)
         }
