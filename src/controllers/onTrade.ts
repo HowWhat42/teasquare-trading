@@ -32,7 +32,7 @@ export const manualOpenTrade = async (pair: string, side: side, leverage: number
             try {
                 if (!price) throw new Error('No price found')
                 const credentials = await prisma.credentials.findFirst({ where: { api: account.api } })
-                if (!credentials || credentials.name !== "HowWhat") return
+                if (!credentials) return
                 const size = await account.canOpenTrade(market.pair, price, market.limit, bankrollPercentage || 1, credentials)
                 if (!size) return
                 console.log('Enough USDT to open trade')
