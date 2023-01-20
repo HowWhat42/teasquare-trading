@@ -9,47 +9,49 @@ datasource db {
 
 model positions {
   id           Int       @id @default(autoincrement())
-  symbol       String?   @db.VarChar(255)
-  leverage     Int?
-  size         Float?    @db.Float
-  entryPrice   Float?    @db.Float
-  long         Boolean?
+  symbol       String    @db.VarChar(255)
+  leverage     Int
+  size         Float     @db.Float
+  entryPrice   Float     @db.Float
+  long         Boolean
   closingPrice Float?    @db.Float
-  open         Boolean?
+  open         Boolean   @default(true)
   openTime     DateTime? @db.DateTime(0)
   percent      Float?    @db.Float
   win          Boolean?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @default(now())
-  traderId     Int?
+  traderId     Int
   traders      traders?  @relation(fields: [traderId], references: [id], map: "positions_ibfk_1")
 
   @@index([traderId], map: "traderId")
 }
 
 model traders {
-  id        Int         @id @default(autoincrement())
-  name      String?     @db.VarChar(255)
-  url       String?     @db.VarChar(255)
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @default(now())
-  bybit     Boolean     @default(false)
-  telegram  Boolean     @default(false)
-  positions positions[]
-  trades    trades[]
+  id                 Int         @id @default(autoincrement())
+  name               String      @db.VarChar(255)
+  url                String      @db.VarChar(255)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @default(now())
+  bybit              Boolean     @default(false)
+  telegram           Boolean     @default(false)
+  minLeverage        Int         @default(1)
+  maxLeverage        Int         @default(1)
+  bankrollPercentage Int         @default(5)
+  marginMode         String      @default("isolated")
+  positions          positions[]
+  trades             trades[]
 }
 
 model credentials {
-  id                 Int      @id @default(autoincrement())
-  name               String   @db.VarChar(255)
-  api                String   @db.VarChar(255)
-  secret             String   @db.VarChar(255)
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @default(now())
-  active             Boolean  @default(false)
-  bankrollPercentage Int      @default(5)
-  maxLeverage        Int      @default(1)
-  trades             trades[]
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(255)
+  api       String   @db.VarChar(255)
+  secret    String   @db.VarChar(255)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  active    Boolean  @default(false)
+  trades    trades[]
 }
 
 model nc_evolutions {

@@ -1,14 +1,18 @@
+import { credentials } from "@prisma/client"
 import { Server } from "socket.io"
-import { PORT } from './config'
-import { createAccount, loadAccounts, removeAccount, checkBalance, accounts, setLeverage, watchTrades } from "./controllers/account"
-import { closeTrade, openTrade } from "./controllers/onTrade"
+import { PORT, prisma } from './config'
+import { accounts, Account } from "./controllers/account"
+import { closeTrade, signalOpenTrade, manualOpenTrade, closeTradeById } from "./controllers/onTrade"
 import { sendDebugMessage } from "./utils/telegram"
 
 const startServer = async () => {
     try {
-        await loadAccounts()
+        const credentials = await prisma.credentials.findMany({ where: { active: true } })
+        credentials.map(async (credential: credentials) => {
+            new Account(credential.api, credential.secret, credential)
+        })
         console.log('Accounts loaded')
-        accounts.map(account => watchTrades(account))
+        accounts.forEach(account => account.watchTrades())
         // await setLeverage(accounts[1], 'OCEANUSDT', 4)
         // const positions = await accounts[1].privateGetPrivateLinearPositionList({ symbol: 'ICPUSDT' })
         // console.log(positions)
@@ -49,10 +53,28 @@ io.on('connection', (socket) => {
         console.log(msg)
     })
 
-    socket.on('openTrade', async (trade) => {
+    socket.on('manualOpenTrade', async (trade) => {
         console.log('Nouveau Signal Ouverture', trade)
         try {
-            await openTrade(trade.pair, trade.side, trade.leverage, trade.traderId)
+            await manualOpenTrade(trade.pair, trade.side, trade.leverage, trade.isolated, trade.bankrollPercentage, trade?.limitPrice, trade?.tp, trade?.sl)
+        } catch (error) {
+            console.log(error)
+        }
+    })
+
+    socket.on('signalOpenTrade', async (trade) => {
+        console.log('Nouveau Signal Ouverture', trade)
+        try {
+            await signalOpenTrade(+trade.id)
+        } catch (error) {
+            console.log(error)
+        }
+    })
+
+    socket.on('manualCloseTrade', async (trade) => {
+        console.log('Nouveau Signal Clotûre', trade)
+        try {
+            await closeTradeById(+trade.id)
         } catch (error) {
             console.log(error)
         }
@@ -61,21 +83,26 @@ io.on('connection', (socket) => {
     socket.on('closeTrade', async (trade) => {
         console.log('Nouveau Signal Clotûre', trade)
         try {
-            await closeTrade(trade.pair, trade.traderId)
+            await closeTrade(trade.pair, trade?.traderId)
         } catch (error) {
             console.log(error)
         }
     })
 
-    socket.on('addAccount', (account) => {
+    socket.on('addAccount', async (account) => {
         console.log('Nouveau compte', account)
         sendDebugMessage(`Nouveau compte`)
-        createAccount(account.api, account.secret)
+        const credential = await prisma.credentials.findFirst({ where: { api: account.api } })
+        if (!credential) return
+        new Account(account.api, account.secret, credential)
     })
 
     socket.on('deleteAccount', (account) => {
         console.log('Suppression compte', account)
         sendDebugMessage(`Suppression compte`)
-        removeAccount(account.api)
+        const accountToDelete = accounts.find(a => a.api === account.api)
+        if (accountToDelete) {
+            accountToDelete.delete()
+        }
     })
 })
