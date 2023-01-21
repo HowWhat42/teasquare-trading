@@ -51,6 +51,15 @@ export class Account {
                 throw new BadRequest(error.message)
             }
         }
+        try {
+            await this.bybit.privatePostPrivateLinearPositionSetLeverage({ symbol, buy_leverage: value, sell_leverage: value })
+        } catch (error: any) {
+            if (error.message.includes('leverage not modified')) {
+                console.log('Leverage not modified')
+            } else {
+                throw new BadRequest(error.message)
+            }
+        }
     }
 
     async watchTrades() {
