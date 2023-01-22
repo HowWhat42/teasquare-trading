@@ -78,7 +78,7 @@ export const signalOpenTrade = async (id: number) => {
                 if (!size) return
                 console.log('Enough USDT to open trade')
                 await account.setLeverage(market.pair, isolated, leverage)
-                const side = trade.long ? 'sell' : 'buy'
+                const side = trade.long ? 'buy' : 'sell'
                 await account.sendOrderOpen(market.pair, type, side, price, size, leverage, credentials, trader.id)
             } catch (error) {
                 console.log(error)
