@@ -89,12 +89,13 @@ io.on('connection', (socket) => {
         }
     })
 
-    socket.on('addAccount', async (account) => {
-        console.log('Nouveau compte', account)
+    socket.on('addAccount', async (data) => {
+        console.log('Nouveau compte', data)
         sendDebugMessage(`Nouveau compte`)
-        const credential = await prisma.credentials.findFirst({ where: { api: account.api } })
+        const credential = await prisma.credentials.findFirst({ where: { api: data.api } })
         if (!credential) return
-        new Account(account.api, account.secret, credential)
+        const account = new Account(data.api, data.secret, credential)
+        account.watchTrades()
     })
 
     socket.on('deleteAccount', (account) => {
