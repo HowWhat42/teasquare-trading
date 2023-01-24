@@ -13,10 +13,12 @@
     "ccxt": "^2.1.18",
     "dotenv": "^16.0.3",
     "googleapis": "105",
+    "node-schedule": "^2.1.1",
     "socket.io": "^4.5.3"
   },
   "devDependencies": {
     "@types/node": "^18.11.9",
+    "@types/node-schedule": "^2.1.0",
     "concurrently": "^7.5.0",
     "nodemon": "^2.0.20",
     "prisma": "^4.6.0",

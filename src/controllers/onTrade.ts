@@ -50,7 +50,7 @@ export const manualOpenTrade = async (pair: string, side: side, leverage: number
 
 export const signalOpenTrade = async (id: number) => {
     const trade = await prisma.positions.findUnique({ where: { id } })
-    if (!trade) return
+    if (!trade || !trade.traderId) return
     if (accounts.length === 0) return
     const market = await marketParser(trade.symbol)
     if (market?.pair) {

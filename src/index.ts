@@ -4,11 +4,23 @@ import { PORT, prisma } from './config'
 import { accounts, Account } from "./controllers/account"
 import { closeTrade, signalOpenTrade, manualOpenTrade, closeTradeById } from "./controllers/onTrade"
 import { sendDebugMessage } from "./utils/telegram"
+import { scheduleJob } from 'node-schedule'
+import { updateDailyCell } from "./utils/googleapi"
+
+scheduleJob('59 23 * * *', async () => {
+    console.log('Updating Daily Cell')
+    const oldBalance = await prisma.credentials.findFirst({ where: { id: 1 } })
+    if (!oldBalance) throw new Error('No balance found')
+    const newBalance = await accounts[0].checkBalance('USDT')
+    await prisma.credentials.update({ where: { id: 1 }, data: { balance: newBalance.total } })
+    const percent = (newBalance.total - oldBalance.balance) / oldBalance.balance
+    await updateDailyCell(percent)
+})
 
 const startServer = async () => {
     try {
         const credentials = await prisma.credentials.findMany({ where: { active: true } })
-        credentials.map(async (credential: credentials) => {
+        credentials.forEach(async (credential: credentials) => {
             new Account(credential.api, credential.secret, credential)
         })
         console.log('Accounts loaded')

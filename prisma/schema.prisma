@@ -11,7 +11,7 @@ model positions {
   id           Int       @id @default(autoincrement())
   symbol       String    @db.VarChar(255)
   leverage     Int
-  size         Float     @db.Float
+  size         Float     @default(0)
   entryPrice   Float     @db.Float
   long         Boolean
   closingPrice Float?    @db.Float
@@ -21,7 +21,7 @@ model positions {
   win          Boolean?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @default(now())
-  traderId     Int
+  traderId     Int?
   traders      traders?  @relation(fields: [traderId], references: [id], map: "positions_ibfk_1")
 
   @@index([traderId], map: "traderId")
@@ -51,6 +51,7 @@ model credentials {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
   active    Boolean  @default(false)
+  balance   Float    @default(0)
   trades    trades[]
 }
 
